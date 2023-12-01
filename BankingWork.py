@@ -7,7 +7,9 @@ class Methods(object):
 
     def __init__(self) -> None:
         pass
+
     #method used to calculate the DQRate
+    #returns the average dq rate for a certain factor
     def createDQRate(self, dataFrame):
         dqSum = 0
         num = 0
@@ -27,6 +29,7 @@ class Methods(object):
             num += 1
         dqMean2023 = dqSum / num
         return dqMean2023
+       
 
 
 MethodObject = Methods()
@@ -37,21 +40,31 @@ date2023 = np.datetime64('2023-01-01')
 df2023 = df[df['Purch Date'] >= date2023]
 
 dqRate2023 = MethodObject.createDQRate(df2023)
-print("DQ Rate for 2023: " + str(dqRate2023))
+print("Average DQ Rate for 2023: " + str(dqRate2023))
 
 statesUsed = []
-
 for state in df2023['State']:
-    print("State " + state)
     if state in statesUsed:
         continue
     statesUsed.append(state)
-    dfState = df[df2023['State'] == state] 
+    dfState = df2023[(df2023['State'] == state)]
+
     dqRateState = MethodObject.createDQRate(dfState)
-    print("DQ Rate for " + state + " in 2023: " + dqRateState)
-        
+    print("Average DQ Rate for " + state + " in 2023: " + str(dqRateState))
+
+    #Sort by dealer name or dealer id?
+    dealersUsed = []
+    for dealer in dfState['Dealer Name']:
+        if dealer in dealersUsed:
+            continue
+        dealersUsed.append(dealer)
+        dfDealer = dfState[dfState['Dealer Name'] == dealer]
+
+        dqRateDealer = MethodObject.createDQRate(dfDealer)
+        print("Average DQ Rate for " + dealer + " in " + state + " during 2023: " + str(dqRateDealer))
 
 
+        ##ttest_ind(dfState, df)
 
 
 
@@ -62,8 +75,11 @@ for state in df2023['State']:
 
 
 """
-Goals:
+Steps completed
+1. compute average dq rate for the year 2023
+2. computer the average dq rate for each state
 
+Goals:
 Steps
 1. Organize data by purchase year
 2. Organize data by average dq rate per year
