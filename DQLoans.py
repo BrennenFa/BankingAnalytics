@@ -2,7 +2,7 @@ from scipy.stats import ttest_ind
 import pandas as pd
 import datetime
 import numpy as np
-
+#from statsmodels.stats.weightstats import ztest as ztest
 class Methods(object):
 
     def __init__(self) -> None:
@@ -13,7 +13,7 @@ class Methods(object):
     def createDQRate(self, dataFrame):
         dqSum = 0
         num = 0
-        for status in df2023['DQ Status']:
+        for status in dataFrame['DQ Status']:
             #possible errors = if dq is not found, it is not included in number.
             #Is this correct?
             if status.find("Not Found") != -1:
@@ -27,10 +27,13 @@ class Methods(object):
             elif status.find("4") != -1:
                 dqSum += 1
             num += 1
+        if num == 0:
+            return 0
         dqMean2023 = dqSum / num
         return dqMean2023
        
 
+dfData = pd.DataFrame(columns=['Year','State','Dealer','DQ Rate'])
 
 MethodObject = Methods()
 df=pd.read_excel("data.xlsx")
@@ -48,10 +51,14 @@ for state in df2023['State']:
         continue
     statesUsed.append(state)
     dfState = df2023[(df2023['State'] == state)]
-
+    
+    
+    dqRatesStateList = []
     dqRateState = MethodObject.createDQRate(dfState)
+    
     print("Average DQ Rate for " + state + " in 2023: " + str(dqRateState))
-
+    df2 = pd.DataFrame([(2023, state, "Average", dqRateState)], columns=['Year','State','Dealer','DQ Rate'])
+    dfData = dfData._append(df2)
     #Sort by dealer name or dealer id?
     dealersUsed = []
     for dealer in dfState['Dealer Name']:
@@ -61,11 +68,12 @@ for state in df2023['State']:
         dfDealer = dfState[dfState['Dealer Name'] == dealer]
 
         dqRateDealer = MethodObject.createDQRate(dfDealer)
-        print("Average DQ Rate for " + dealer + " in " + state + " during 2023: " + str(dqRateDealer))
+        print("    Average DQ Rate for " + dealer + " in " + state + " during 2023: " + str(dqRateDealer))
+        df2 = pd.DataFrame([(2023, state, dealer, dqRateDealer)], columns=['Year','State','Dealer','DQ Rate'])
+        dfData = dfData._append(df2)
 
-
-        ##ttest_ind(dfState, df)
-
+        
+dfData.to_csv('data.csv', index=False)
 
 
 
@@ -86,6 +94,7 @@ Steps
 3. Average dq rate by state -> Compare each dealer in state, is it statistically significant
 4. Test for normality/decide which test to use
 
+one sample z test!
 
 purchase date/year (column P)
 
@@ -116,8 +125,8 @@ commands for virtualenv
 python -m venv venv
 pip install virtualenv
 # In cmd.exe
-venv\Scripts\activate.bat
+
+
 
 
 """
-
