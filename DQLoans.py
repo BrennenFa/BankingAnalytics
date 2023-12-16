@@ -81,7 +81,7 @@ for state in df2023['State']:
     dfData = dfData._append(df2)
 
     dealersUsed = []
-    for dealer in dfState['Dealer Name']:
+    for dealer in dfState['Dealer Name']: 
         if dealer in dealersUsed:
             continue
         dealersUsed.append(dealer)
