@@ -33,7 +33,8 @@ class Methods(object):
         return dqMean2023
        
 
-dfData = pd.DataFrame(columns=['Year','State','Dealer','DQ Rate'])
+
+dfData = pd.DataFrame(columns=['Year','State','Dealer','DQ Rate','Standard Deviations Away'])
 
 MethodObject = Methods()
 df=pd.read_excel("data.xlsx")
@@ -56,10 +57,29 @@ for state in df2023['State']:
     dqRatesStateList = []
     dqRateState = MethodObject.createDQRate(dfState)
     
-    print("Average DQ Rate for " + state + " in 2023: " + str(dqRateState))
-    df2 = pd.DataFrame([(2023, state, "Average", dqRateState)], columns=['Year','State','Dealer','DQ Rate'])
+    #print("Total DQ Rate for " + state + " in 2023: " + str(dqRateState))
+    df2 = pd.DataFrame([(2023, state, "Total", dqRateState, 0)], columns=['Year','State','Dealer','DQ Rate','Standard Deviations Away'])
     dfData = dfData._append(df2)
     #Sort by dealer name or dealer id?
+
+
+    #things to do
+    #1. store the information in a 2d array
+    #2. for each state, calculate the average and standard deviation
+    #3. compare the information of each indivual dealer to this, give how many standard deviations
+    #4. 
+    dqRates = []
+    for dealer in dfState['Dealer Name']:
+        dfDealer = dfState[dfState['Dealer Name'] == dealer]
+        dqRates.append(MethodObject.createDQRate(dfDealer))
+
+    #Find the average dq rate and standard deviation
+    stateAverage = sum(dqRates) / len(dqRates)
+    stateSD = np.std(dqRates)
+
+    df2 = pd.DataFrame([(2023, state, "Average", stateAverage, 0)], columns=['Year','State','Dealer','DQ Rate','Standard Deviations Away'])
+    dfData = dfData._append(df2)
+
     dealersUsed = []
     for dealer in dfState['Dealer Name']:
         if dealer in dealersUsed:
@@ -68,12 +88,14 @@ for state in df2023['State']:
         dfDealer = dfState[dfState['Dealer Name'] == dealer]
 
         dqRateDealer = MethodObject.createDQRate(dfDealer)
-        print("    Average DQ Rate for " + dealer + " in " + state + " during 2023: " + str(dqRateDealer))
-        df2 = pd.DataFrame([(2023, state, dealer, dqRateDealer)], columns=['Year','State','Dealer','DQ Rate'])
-        dfData = dfData._append(df2)
-
         
-dfData.to_csv('data.csv', index=False)
+        print("    Total DQ Rate for " + dealer + " in " + state + " during 2023: " + str(dqRateDealer))
+        distance = (dqRateDealer - stateAverage) / stateSD
+        df2 = pd.DataFrame([(2023, state, dealer, dqRateDealer, distance)], columns=['Year','State','Dealer','DQ Rate', 'Standard Deviations Away'])
+        dfData = dfData._append(df2)
+    #Now have all data in state finished
+    
+dfData.to_excel('analyzed_data.xlsx', index=False)
 
 
 
@@ -94,7 +116,9 @@ Steps
 3. Average dq rate by state -> Compare each dealer in state, is it statistically significant
 4. Test for normality/decide which test to use
 
-one sample z test!
+---find standard deviation for the state
+---find the average for the state
+--- (current value - mean) / standard deviation
 
 purchase date/year (column P)
 
@@ -125,6 +149,8 @@ commands for virtualenv
 python -m venv venv
 pip install virtualenv
 # In cmd.exe
+venv\Scripts\activate.bat
+
 
 
 
